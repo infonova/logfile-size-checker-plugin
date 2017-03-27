@@ -9,17 +9,15 @@
     <version>2.11</version>
     <relativePath/>
   </parent>
-  <groupId>org.jenkins-ci.plugins</groupId>
-  <artifactId>checkLogFileSize-plugin</artifactId>
+
+  <artifactId>logfile-size-checker</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
 
-  <name>checkLogFileSize Plugin</name>
-  <description>Checks the Size of logs of running Jobs</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
-
-  <!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for the applicable one if needed. -->
+  <name>Log File Size Checker Plugin</name>
+  <description>Checks the size of log files of running jobs and terminates them they grow too big</description>
+  <url>https://github.com/infonova/logfile-size-checker-plugin</url>
 
   <licenses>
     <license>
@@ -34,27 +32,18 @@
       <name>Josef Rosel</name>
       <email>josef.rosel@infonova.com</email>
     </developer>
+    <developer>
+      <id>ederst</id>
+      <name>Stefan Eder</name>
+      <email>stefan.eder@infonova.com</email>
+    </developer>
   </developers>
-
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
     <maven-surefire-report-plugin.version>${maven-surefire-plugin.version}</maven-surefire-report-plugin.version>
-
     <!-- Baseline Jenkins version you use to build the plugin. Users must have this version or newer to run. -->
     <jenkins.version>2.32.3</jenkins.version>
     <!-- Java Level to use. Java 7 required when using core >= 1.612 -->
@@ -69,11 +58,24 @@
   </properties>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com:infonova/checkLogFileSize-plugin.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com:infonova/checkLogFileSize-plugin.git</developerConnection>
-    <url>https://github.com/infonova/logfilesizechecker</url>
+    <connection>scm:git:ssh://git@github.com:infonova/logfile-size-checker-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:infonova/logfile-size-checker-plugin.git</developerConnection>
+    <url>https://github.com/infonova/logfile-size-checker-plugin</url>
     <tag>HEAD</tag>
   </scm>
+
+  <repositories>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <distributionManagement>
     <repository>
