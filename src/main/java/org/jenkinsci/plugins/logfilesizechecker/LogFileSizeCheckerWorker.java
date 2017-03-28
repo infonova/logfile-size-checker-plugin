@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.logfilesizechecker;
 import hudson.Extension;
 import hudson.model.*;
 import jenkins.model.CauseOfInterruption;
+import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
 
         @Override
         public String getShortDescription() {
-            String logFileSizeMB = String.format("%.2f", (float) logFileSize / LogFileSizeCheckerConfig.DescriptorImpl.MB_FACTOR);
+            String logFileSizeMB = String.format("%.2f", (float) logFileSize / LogFileSizeCheckerConfig.MB_FACTOR);
             return Messages.MaxLogFileSizeReached_shortDescription(logFileSizeMB);
         }
     }
@@ -78,8 +79,10 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
         return getConfig().getRecurrencePeriodMillis();
     }
 
-    private LogFileSizeCheckerConfig.DescriptorImpl getConfig() {
-        return (LogFileSizeCheckerConfig.DescriptorImpl) Jenkins.getInstance().getDescriptorOrDie(LogFileSizeCheckerConfig.class);
+    public LogFileSizeCheckerConfig getConfig() {
+        // injecting with @Inject won't work, because it class get's new instanciated every now and then, so use this
+        // method as suggested by the documentation of GlobalConfiguration
+        return GlobalConfiguration.all().get(LogFileSizeCheckerConfig.class);
     }
 
 }
