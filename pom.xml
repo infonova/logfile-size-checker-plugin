@@ -16,7 +16,7 @@
 
 
   <name>Log File Size Checker Plugin</name>
-  <description>Checks the size of log files of running jobs and terminates them they grow too big</description>
+  <description>This plugin checks the size of log files of running jobs and terminates them when they reach a configured max size.</description>
   <url>https://github.com/infonova/logfile-size-checker-plugin</url>
 
   <licenses>
