@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.logfilesizechecker;
 
 import hudson.Extension;
 import hudson.model.*;
-import jenkins.model.CauseOfInterruption;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 
@@ -16,22 +15,7 @@ import java.util.logging.Logger;
 @Extension
 public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
 
-    public static class MaxLogFileSizeReached extends CauseOfInterruption {
-
-        private final long logFileSize;
-
-        MaxLogFileSizeReached(long logFileSize) {
-            this.logFileSize = logFileSize;
-        }
-
-        @Override
-        public String getShortDescription() {
-            String logFileSizeMB = String.format("%.2f", (float) logFileSize / LogFileSizeCheckerConfig.MB_FACTOR);
-            return Messages.MaxLogFileSizeReached_shortDescription(logFileSizeMB);
-        }
-    }
-
-    public static final Lock EXECUTE_LOCK = new ReentrantLock();
+    private static final Lock EXECUTE_LOCK = new ReentrantLock();
 
     private static final Logger LOGGER = Logger.getLogger(LogFileSizeCheckerWorker.class.getName());
 
@@ -55,7 +39,7 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
                                 long currentLogFileSize = currentRun.getLogFile().length();
 
                                 if (currentLogFileSize >= getConfig().getMaxLogFileSizeBytes()) {
-                                    executor.interrupt(getConfig().getBuildResult(), new MaxLogFileSizeReached(currentLogFileSize));
+                                        getConfig().getLogFileSizeCheckerExecutor().execute(currentRun);
                                 }
                             }
                         }
@@ -79,10 +63,10 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
         return getConfig().getRecurrencePeriodMillis();
     }
 
-    public LogFileSizeCheckerConfig getConfig() {
-        // injecting with @Inject won't work, because it class get's new instanciated every now and then, so use this
+    public GlobalLogFileSizeCheckerConfig getConfig() {
+        // injecting with @Inject won't work, because it class gets a new instance every now and then, so use this
         // method as suggested by the documentation of GlobalConfiguration
-        return GlobalConfiguration.all().get(LogFileSizeCheckerConfig.class);
+        return GlobalConfiguration.all().get(GlobalLogFileSizeCheckerConfig.class);
     }
 
 }

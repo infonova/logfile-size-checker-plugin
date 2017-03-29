@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-  ${%This plugin checks the size of log files of running jobs and terminates them when they reach a configured max size.}
+  ${%This plugin checks the log files sizes of running jobs and either terminates them or truncates their logs when they reach a configured max size.}
 </div>

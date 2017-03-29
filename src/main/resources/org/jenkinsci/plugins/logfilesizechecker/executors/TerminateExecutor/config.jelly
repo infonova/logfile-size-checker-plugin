@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry title="${%Build result}" field="buildResult" description="${%Specify the outcome when a log file exceeds defined max size}">
+        <f:radio name="buildResult" title="${%Fail build}" value="FAILURE" checked="${instance.failBuild or instance.buildResult == null}" />
+        <f:radio name="buildResult" title="${%Abort build}" value="ABORTED" checked="${instance.abortBuild}" />
+    </f:entry>
+</j:jelly>
