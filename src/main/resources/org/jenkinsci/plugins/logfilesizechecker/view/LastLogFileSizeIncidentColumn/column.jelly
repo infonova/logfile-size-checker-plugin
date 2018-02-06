@@ -1,0 +1,15 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <j:set var="liBuild" value="${it.getLastLogFileSizeIncident(job)}"/>
+    <td data="${liBuild.timestampString2 ?: '-'}">
+        <j:choose>
+            <j:when test="${liBuild!=null}">
+                ${lfBuild.timestampString}
+                - <a href="${rootURL}/${liBuild.url}" class="model-link inside">${liBuild.displayName} (${it.getIncidentType(liBuild)})</a>
+            </j:when>
+            <j:otherwise>
+                ${%N/A}
+            </j:otherwise>
+        </j:choose>
+    </td>
+</j:jelly>

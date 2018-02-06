@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core">
-    <th>${%Last Max Log File Size Reached}</th>
+    <th>${%Last Log File Size Incident}</th>
 </j:jelly>

@@ -1,21 +1,27 @@
 package org.jenkinsci.plugins.logfilesizechecker.view;
 
 import hudson.Extension;
-import hudson.model.*;
+import hudson.model.Descriptor;
+import hudson.model.Job;
+import hudson.model.TopLevelItem;
+import hudson.model.View;
 import hudson.views.ViewJobFilter;
+import org.jenkinsci.plugins.logfilesizechecker.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Extension
-public class MaxLogFileSizeReachedViewFilter extends ViewJobFilter {
+public class LogFileSizeIncidentViewFilter extends ViewJobFilter {
 
     /**
      * Our constructor.
      */
     @DataBoundConstructor
-    public MaxLogFileSizeReachedViewFilter() {
+    public LogFileSizeIncidentViewFilter() {
     }
 
 
@@ -30,7 +36,7 @@ public class MaxLogFileSizeReachedViewFilter extends ViewJobFilter {
             if (item instanceof Job) {
                 Job job = (Job) item;
 
-                if (!job.getBuilds().filter(new InterruptedByMaxLogFileSizeReached()).isEmpty()) {
+                if (!job.getBuilds().filter(new LogFileSizeIncidentPredicate()).isEmpty()) {
                     result.add(item);
                 }
             }
@@ -42,9 +48,10 @@ public class MaxLogFileSizeReachedViewFilter extends ViewJobFilter {
     @Extension(optional = true)
     public static class DescriptorImpl extends Descriptor<ViewJobFilter> {
 
+        @Nonnull
         @Override
         public String getDisplayName() {
-            return org.jenkinsci.plugins.logfilesizechecker.Messages.LogFileSizeCheckerViewFilter_displayName();
+            return Messages.LogFileSizeIncidentViewFilter_displayName();
         }
     }
 }

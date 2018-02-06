@@ -3,12 +3,13 @@ package org.jenkinsci.plugins.logfilesizechecker;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
-import hudson.model.Result;
 import hudson.util.FormValidation;
 import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.jenkinsci.plugins.logfilesizechecker.executors.LogFileSizeCheckerExecutor;
+import org.jenkinsci.plugins.logfilesizechecker.executors.TruncateLogExecutor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -18,9 +19,13 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @Extension
-public class LogFileSizeCheckerConfig extends GlobalConfiguration {
+public class GlobalLogFileSizeCheckerConfig extends GlobalConfiguration {
 
-    static final long MB_FACTOR = 1024 * 1024;
+    private static final String RECURRENCE_PERIOD_PARAMETER = "recurrencePeriod";
+    private static final String MAX_LOGFILE_SIZE_PARAMETER  = "maxLogFileSize";
+    private static final String EXECUTOR_TYPE_PARAMETER     = "executorType";
+
+    public static final long MB_FACTOR = 1024 * 1024;
 
     private static final long MIN_RECURRENCE_PERIOD = 1;
     private static final long DEFAULT_RECURRENCE_PERIOD = 30;
@@ -28,38 +33,13 @@ public class LogFileSizeCheckerConfig extends GlobalConfiguration {
     private static final long MIN_LOG_FILE_SIZE = 1;
     private static final long DEFAULT_LOG_FILE_SIZE = 100;
 
-    private static final Result DEFAULT_BUILD_RESULT = Result.FAILURE;
-
     private long recurrencePeriod;
     private long maxLogFileSize;
-    private Result buildResult;
+    private LogFileSizeCheckerExecutor logFileSizeCheckerExecutor;
 
-    public LogFileSizeCheckerConfig() {
+    public GlobalLogFileSizeCheckerConfig() {
         super();
         load();
-        init();
-    }
-
-    private void init() {
-        boolean isDirty = false;
-        if (recurrencePeriod < MIN_RECURRENCE_PERIOD) {
-            recurrencePeriod = DEFAULT_RECURRENCE_PERIOD;
-            isDirty = true;
-        }
-
-        if (maxLogFileSize < MIN_LOG_FILE_SIZE) {
-            maxLogFileSize = DEFAULT_LOG_FILE_SIZE;
-            isDirty = true;
-        }
-
-        if (buildResult == null) {
-            buildResult = DEFAULT_BUILD_RESULT;
-            isDirty = true;
-        }
-
-        if (isDirty) {
-            save();
-        }
     }
 
     @Override
@@ -69,12 +49,11 @@ public class LogFileSizeCheckerConfig extends GlobalConfiguration {
     }
 
     public long getRecurrencePeriod() {
-        return recurrencePeriod;
-    }
+        if (recurrencePeriod < MIN_RECURRENCE_PERIOD) {
+            recurrencePeriod = DEFAULT_RECURRENCE_PERIOD;
+        }
 
-    @SuppressWarnings("unused")
-    public void setRecurrencePeriod(long recurrencePeriod) {
-        this.recurrencePeriod = recurrencePeriod;
+        return recurrencePeriod;
     }
 
     public long getRecurrencePeriodMillis() {
@@ -82,6 +61,10 @@ public class LogFileSizeCheckerConfig extends GlobalConfiguration {
     }
 
     public long getMaxLogFileSize() {
+        if (maxLogFileSize < MIN_LOG_FILE_SIZE) {
+            maxLogFileSize = DEFAULT_LOG_FILE_SIZE;
+        }
+
         return maxLogFileSize;
     }
 
@@ -89,23 +72,12 @@ public class LogFileSizeCheckerConfig extends GlobalConfiguration {
         return getMaxLogFileSize() * MB_FACTOR;
     }
 
-    @SuppressWarnings("unused")
-    public void setMaxLogFileSize(long maxLogFileSize) {
-        this.maxLogFileSize = maxLogFileSize;
-    }
+    public LogFileSizeCheckerExecutor getLogFileSizeCheckerExecutor() {
+        if (logFileSizeCheckerExecutor == null) {
+            logFileSizeCheckerExecutor = new TruncateLogExecutor();
+        }
 
-    public Result getBuildResult() {
-        return buildResult;
-    }
-
-    @SuppressWarnings("unused")
-    public boolean isAbortBuild() {
-        return Result.ABORTED.equals(buildResult);
-    }
-
-    @SuppressWarnings("unused")
-    public boolean isFailBuild() {
-        return Result.FAILURE.equals(buildResult);
+        return logFileSizeCheckerExecutor;
     }
 
     private long checkNumber(String value, long minValue, String type) {
@@ -159,12 +131,14 @@ public class LogFileSizeCheckerConfig extends GlobalConfiguration {
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws Descriptor.FormException {
-        this.recurrencePeriod = checkRecurrencePeriod(formData.getString("recurrencePeriod"));
-        this.maxLogFileSize = checkMaxLogFileSize(formData.getString("maxLogFileSize"));
-        this.buildResult = Result.fromString(formData.getString("buildResult"));
+        this.recurrencePeriod = checkRecurrencePeriod(formData.getString(RECURRENCE_PERIOD_PARAMETER));
+        this.maxLogFileSize = checkMaxLogFileSize(formData.getString(MAX_LOGFILE_SIZE_PARAMETER));
+        this.logFileSizeCheckerExecutor = LogFileSizeCheckerExecutor.all().newInstanceFromRadioList(formData.getJSONObject(EXECUTOR_TYPE_PARAMETER));
+
         save();
 
         return super.configure(req, formData);
     }
+
 }
 
