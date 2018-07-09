@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.*;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.workflow.support.steps.ExecutorStepExecution;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,6 +24,26 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
         super(Messages.LogFileSizeCheckerWorker_name());
     }
 
+
+    private Run getCurrentRun(Queue.Executable executable) {
+        if (executable instanceof Run) {
+            return (Run)executable;
+        }
+
+        if (Jenkins.getInstance().getPlugin("workflow-durable-task-step") != null) {
+            if (executable.getParent() instanceof ExecutorStepExecution.PlaceholderTask) {
+                return ((ExecutorStepExecution.PlaceholderTask) executable.getParent()).run();
+            }
+        }
+
+        if (executable != null && executable.getParent().getOwnerTask() instanceof Job) {
+            Job job = (Job)executable.getParent().getOwnerTask();
+            return job.getLastBuild();
+        }
+
+        return null;
+    }
+
     @Override
     protected void execute(TaskListener listener) throws IOException, InterruptedException {
         if (EXECUTE_LOCK.tryLock()) {
@@ -32,16 +53,21 @@ public class LogFileSizeCheckerWorker extends AsyncAperiodicWork {
                     List<Executor> executors = computer.getExecutors();
 
                     for (Executor executor : executors) {
-                        if (executor.isBusy()) {
-                            Run currentRun = ((Run) executor.getCurrentExecutable());
-                            if (currentRun != null) {
-                                LOGGER.log(Level.FINER, Messages.LogFileSizeCheckerWorker_checkingCurrentRun(currentRun.getFullDisplayName()));
-                                long currentLogFileSize = currentRun.getLogFile().length();
+                        try {
+                            if (executor.isBusy()) {
+                                Run currentRun = getCurrentRun(executor.getCurrentExecutable());
 
-                                if (currentLogFileSize >= getConfig().getMaxLogFileSizeBytes()) {
+                                if (currentRun != null) {
+                                    LOGGER.log(Level.FINER, Messages.LogFileSizeCheckerWorker_checkingCurrentRun(currentRun.getFullDisplayName()));
+                                    long currentLogFileSize = currentRun.getLogFile().length();
+
+                                    if (currentLogFileSize >= getConfig().getMaxLogFileSizeBytes()) {
                                         getConfig().getLogFileSizeCheckerExecutor().execute(currentRun);
+                                    }
                                 }
                             }
+                        } catch (Exception e) {
+                            LOGGER.log(Level.WARNING, Messages.LogFileSizeCheckerWorker_unableToCheckLog(executor), e);
                         }
                     }
                 }
